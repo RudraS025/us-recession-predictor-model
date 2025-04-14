@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 logger.info("Attempting to load the model...")
 try:
-    model = joblib.load('vertex_model.joblib')
+    model = joblib.load('../models/vertex_model.joblib')
     logger.info(f"✅ Model loaded successfully. Type: {type(model)}")
 except Exception as e:
     logger.error(f"❌ Error loading model: {e}")
