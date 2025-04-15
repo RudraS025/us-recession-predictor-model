@@ -1,36 +1,39 @@
-import joblib
+import os
 from flask import Flask, request, jsonify
-import numpy as np
+import joblib
 import pandas as pd
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))  # Path to the src directory
+MODEL_PATH = os.path.join(os.path.dirname(APP_ROOT), 'models', 'vertex_model.joblib')
+model = None
 
-logger.info("Attempting to load the model...")
-try:
-    model = joblib.load('../models/vertex_model.joblib')
-    logger.info(f"✅ Model loaded successfully. Type: {type(model)}")
-except Exception as e:
-    logger.error(f"❌ Error loading model: {e}")
-    model = None
-    # Optionally, re-raise the exception to see it in the server logs (if enabled)
-    # raise e
+@app.before_first_request
+def load_model():
+    global model
+    print("Attempting to load the model...")
+    try:
+        model = joblib.load(MODEL_PATH)
+        print("✅ Model loaded successfully!")
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        model = None
+
+@app.route('/', methods=['GET'])
+def index():
+    return "US Recession Prediction API is running!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None:
-        return jsonify({'error': 'Model not loaded.'}), 500
+        return jsonify({'error': 'Model not loaded'}), 500
     try:
         data = request.get_json()
-        # ... (rest of your prediction logic) ...
-        prediction = model.predict(input_data).tolist()
-        return jsonify({'prediction': prediction})
+        input_df = pd.DataFrame([data])
+        prediction = model.predict(input_df)
+        return jsonify({'prediction': int(prediction[0])})
     except Exception as e:
-        logger.error(f"Error during prediction: {e}")
-        return jsonify({'error': f'Error during prediction: {e}'}), 500
+        return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
