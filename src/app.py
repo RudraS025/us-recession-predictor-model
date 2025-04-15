@@ -2,22 +2,25 @@ import os
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-APP_ROOT = os.path.dirname(os.path.abspath(__file__))  # Path to the src directory
-MODEL_PATH = os.path.join(os.path.dirname(APP_ROOT), 'models', 'vertex_model.joblib')
-model = None
 
-@app.before_first_request
-def load_model():
-    global model
-    print("Attempting to load the model...")
-    try:
-        model = joblib.load(MODEL_PATH)
-        print("✅ Model loaded successfully!")
-    except Exception as e:
-        print(f"❌ Error loading model: {e}")
-        model = None
+# Update the model path to point to the notebooks sub-folder
+logger.info("Attempting to load the model...")
+try:
+    MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../notebooks/vertex_model.joblib')
+    model = joblib.load(MODEL_PATH)
+    logger.info(f"✅ Model loaded successfully. Type: {type(model)}")
+except FileNotFoundError:
+    logger.error(f"❌ Model file not found at {MODEL_PATH}")
+    model = None
+except Exception as e:
+    logger.error(f"❌ Error loading model: {e}")
+    model = None
 
 @app.route('/', methods=['GET'])
 def index():
@@ -26,7 +29,7 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None:
-        return jsonify({'error': 'Model not loaded'}), 500
+        return jsonify({'error': 'Model not loaded.'}), 500
     try:
         data = request.get_json()
         input_df = pd.DataFrame([data])
