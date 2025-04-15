@@ -1,0 +1,13 @@
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.git/
+.venv/
+notebooks/
+data/
+*.ipynb
+*.xlsx
+*.csv
+*.joblib
+*.log

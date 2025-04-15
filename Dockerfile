@@ -2,13 +2,20 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+# Copy the application files
 COPY . /app
 
-# Upgrade pip and install scikit-learn 1.5.2 first
-RUN pip install --upgrade pip
-RUN pip install scikit-learn==1.5.2
+# Install system dependencies required for numpy and scikit-learn
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    gfortran \
+    libatlas-base-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install the remaining dependencies
+# Upgrade pip and install Python dependencies
+RUN pip install --upgrade pip
+RUN pip install scikit-learn==1.3.2
 RUN pip install -r requirements.txt
 
 EXPOSE 5000
